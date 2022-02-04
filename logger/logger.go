@@ -3,6 +3,14 @@ package logger
 import (
 	"io"
 	"log"
+	"sync"
+)
+
+var (
+	Nil = Logger{}
+
+	once     sync.Once
+	instance Logger
 )
 
 type ILogger interface {
@@ -17,10 +25,23 @@ type Logger struct {
 	logger *log.Logger
 }
 
+// New returns a new Logger.
 func New(w io.Writer) *Logger {
 	return &Logger{
 		logger: log.New(w, "", log.Ldate|log.Ltime|log.Lmsgprefix),
 	}
+}
+
+// NewSingleton returns an Instance of Logger and creates a new Instance if none exists yet.
+func NewSingleton(w io.Writer) *Logger {
+
+	once.Do(func() {
+		instance = Logger{
+			logger: log.New(w, "", log.Ldate|log.Ltime|log.Lmsgprefix),
+		}
+	})
+
+	return &instance
 }
 
 func (l *Logger) Debug(msg string, v ...interface{}) {
